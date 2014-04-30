@@ -1,6 +1,6 @@
 CFLAGS=-Wall -std=c99 -ledit
 
 clean:
-	rm -f lisp
+	rm -f parsing
 
-all: lisp
+all: parsing
