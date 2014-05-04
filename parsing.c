@@ -50,7 +50,7 @@ long eval(mpc_ast_t* t) {
 
 
 int main(int argc, char** argv) {
-  puts("FishLisp Version 0.0.0.0.1");
+  puts("FishLisp Version 0.0.0.0.2");
   puts("Press Ctrl+c to Exit\n");
 
   mpc_parser_t* Number   = mpc_new("number");
