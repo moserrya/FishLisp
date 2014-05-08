@@ -23,16 +23,18 @@ void add_history(char* unused) {}
 
 #endif
 
-enum { LVAL_NUM, LVAL_ERR };
+enum { LVAL_NUM, LVAL_ERR, LVAL_SYM, LVAL_SEXPR };
 
-enum { LERR_DIV_ZERO, LERR_BAD_OP, LERR_BAD_NUM };
-
-typedef struct {
+typedef struct lval {
   int type;
-  union {
-    long num;
-    int err;
-  };
+  
+  long num;
+
+  char* err;
+  char* sym;
+
+  int count;
+  struct lval** cell;
 } lval;
 
 lval lval_num(long x) {
