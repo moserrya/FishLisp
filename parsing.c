@@ -119,19 +119,31 @@ lval* lval_read(mpc_ast_t* t) {
   return x;
 }
 
-void lval_print(lval v) {
-  switch (v.type) {
-    case LVAL_NUM: printf("%li", v.num); break;
+void lval_print(lval* v);
 
-    case LVAL_ERR:
-      if (v.err == LERR_DIV_ZERO) { printf("Error: Division by zero!"); }
-      if (v.err == LERR_BAD_OP)   { printf("Error: Invalid Operator!"); }
-      if (v.err == LERR_BAD_NUM)  { printf("Error: Invalid Number!");}
-    break;
+void lval_expr_print(lval* v, char open, char close) {
+  putchar(open);
+  for (int i = 0; i < v->count; i++) {
+    lval_print(v->cell[i]);
+
+    if (i != (v->count-1)) {
+      putchar(' ');
+    }
+  }
+
+  putchar(close);
+}
+
+void lval_print(lval* v) {
+  switch (v->type) {
+    case LVAL_NUM: printf("%li", v->num); break;
+    case LVAL_ERR: printf("Error: %s", v->err); break;
+    case LVAL_SYM: printf("%s", v->sym); break;
+    case LVAL_SEXPR: lval_expr_print(v, '(', ')'); break;
   }
 }
 
-void lval_println(lval v) { lval_print(v); putchar('\n'); }
+void lval_println(lval* v) { lval_print(v); putchar('\n'); }
 
 lval eval_op(lval x, char* op, lval y) {
   if (x.type == LVAL_ERR) { return x; }
