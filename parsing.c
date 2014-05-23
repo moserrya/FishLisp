@@ -102,6 +102,32 @@ lval* lval_add(lval* v, lval* x) {
   return v;
 }
 
+lval* lval_pop(lval* v, int i) {
+  lval* x = v->cell[i];
+
+  memmove(&v->cell[i], &v->cell[i+1], sizeof(lval*) * (v->count-i-1));
+
+  v->count--;
+
+  v->cell = realloc(v->cell, sizeof(lval*) * v->count);
+  return x;
+}
+
+lval* lval_join(lval* x, lval* y) {
+  while (y->count) {
+    x = lval_add(x, lval_pop(y, 0));
+  }
+
+  lval_del(y);
+  return x;
+}
+
+lval* lval_take(lval* v, int i) {
+  lval* x = lval_pop(v, i);
+  lval_del(v);
+  return x;
+}
+
 lval* lval_read_num(mpc_ast_t* t) {
   errno = 0;
   long x = strtol(t->contents, NULL, 10);
@@ -157,23 +183,6 @@ void lval_print(lval* v) {
 void lval_println(lval* v) { lval_print(v); putchar('\n'); }
 
 #define LASSERT(args, cond, err) if (!(cond)) { lval_del(args); return lval_err(err); }
-
-lval* lval_pop(lval* v, int i) {
-  lval* x = v->cell[i];
-
-  memmove(&v->cell[i], &v->cell[i+1], sizeof(lval*) * (v->count-i-1));
-
-  v->count--;
-
-  v->cell = realloc(v->cell, sizeof(lval*) * v->count);
-  return x;
-}
-
-lval* lval_take(lval* v, int i) {
-  lval* x = lval_pop(v, i);
-  lval_del(v);
-  return x;
-}
 
 lval* builtin_op(lval* a, char* op) {
   for (int i = 0; i < a->count; i++) {
@@ -239,25 +248,18 @@ lval* builtin_list(lval* a) {
   return a;
 }
 
+lval* lval_eval(lval* v);
+
 lval* builtin_eval(lval* a) {
   LASSERT(a, (a->count == 1), "Function 'eval' passed too many arguments");
-  LASSERT(a, (a->call[0]->type != LVAL_QEXPR), "Function 'eval' passed incorrect type!");
+  LASSERT(a, (a->cell[0]->type != LVAL_QEXPR), "Function 'eval' passed incorrect type!");
 
   lval* x = lval_take(a, 0);
   x->type = LVAL_SEXPR;
   return lval_eval(x);
 }
 
-lval* lval_join(lval* x, lval* y) {
-  while (y->count) {
-    x = lval_add(x, lval_pop(y, 0));
-  }
-
-  lval_del(y);
-  return x;
-}
-
-lval* bultin_join(lval* a) {
+lval* builtin_join(lval* a) {
   for (int i = 0; i < a->count; i++) {
     LASSERT(a, (a->cell[0]->type == LVAL_QEXPR), "Function 'join' passed incorrect type");
   }
