@@ -206,6 +206,50 @@ lval* builtin_op(lval* a, char* op) {
   return x;
 }
 
+lval* builtin_head(lval* a) {
+  if (a->count != 1) {
+    lval_del(a);
+    return lval_err("Function 'head' passed too many arguments");
+  }
+
+  if (a->cell[0]->type != LVAL_QEXPR) {
+    lval_del(a);
+    return lval_err("Function 'head' passed incorrect types!");
+  }
+
+  if (a->cell[0]->count == 0) {
+    lval_del(a);
+    return lval_err("Function 'head' passed {}!");
+  }
+
+  lval* v = lval_take(a, 0);
+
+  while (v->count > 1) { lval_del(lval_pop(v, 1)); }
+  return v;
+}
+
+lval* builtin_tail(lval* a) {
+  if (a->count != 1) {
+    lval_del(a);
+    return lval_err("Function 'tail' passed too many arguments");
+  }
+
+  if (a->cell[0]->type != LVAL_QEXPR) {
+    lval_del(a);
+    return lval_err("Function 'tail' passed incorrect types!");
+  }
+
+  if (a->cell[0]->count == 0) {
+    lval_del(a);
+    return lval_err("Function 'tail' passed {}!");
+  }
+
+  lval* v = lval_take(a, 0);
+
+  lval_del(lval_pop(v, 1));
+  return v;
+}
+
 lval* lval_eval_sexpr(lval* v) {
   for (int i = 0; i < v->count; i++) {
     if (v->cell[i]->type == LVAL_ERR) { return lval_take(v, i); }
