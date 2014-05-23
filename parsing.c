@@ -284,6 +284,11 @@ lval* builtin(lval* a, char* func) {
 }
 
 lval* lval_eval_sexpr(lval* v) {
+
+  for (int i = 0; i < v->count; i++) {
+    v->cell[i] = lval_eval(v->cell[i]);
+  }
+
   for (int i = 0; i < v->count; i++) {
     if (v->cell[i]->type == LVAL_ERR) { return lval_take(v, i); }
   }
