@@ -234,6 +234,13 @@ lval* builtin_tail(lval* a) {
   return v;
 }
 
+lval* builtin_list(lval* a) {
+  a->type = LVAL_QEXPR;
+  return a;
+}
+
+
+
 lval* lval_eval_sexpr(lval* v) {
   for (int i = 0; i < v->count; i++) {
     if (v->cell[i]->type == LVAL_ERR) { return lval_take(v, i); }
