@@ -239,7 +239,14 @@ lval* builtin_list(lval* a) {
   return a;
 }
 
+lval builtin_eval(lval* a) {
+  LASSERT(a, (a->count == 1), "Function 'eval' passed too many arguments");
+  LASSERT(a, (a->call[0]->type != LVAL_QEXPR), "Function 'eval' passed incorrect type!");
 
+  lval* x = lval_take(a, 0);
+  x->type = LVAL_SEXPR;
+  return lval_eval(x);
+}
 
 lval* lval_eval_sexpr(lval* v) {
   for (int i = 0; i < v->count; i++) {
