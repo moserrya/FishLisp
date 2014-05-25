@@ -23,19 +23,30 @@ void add_history(char* unused) {}
 
 #endif
 
-enum { LVAL_NUM, LVAL_ERR, LVAL_SYM, LVAL_SEXPR, LVAL_QEXPR };
+/* Forward Declarations */
 
-typedef struct lval {
+struct lval;
+struct lenv;
+typedef struct lval lval;
+typedef struct lenv lenv;
+
+/* Lisp value */
+
+enum { LVAL_NUM, LVAL_ERR, LVAL_SYM, LVAL_FUN, LVAL_SEXPR, LVAL_QEXPR };
+
+typedef lval*(*lbuiltin)(lenv*, lval*);
+
+struct lval {
   int type;
   
   long num;
-
   char* err;
   char* sym;
+  lbuiltin fun;
 
   int count;
-  struct lval** cell;
-} lval;
+  lval** cell;
+};
 
 lval* lval_num(long x) {
   lval* v = malloc(sizeof(lval));
