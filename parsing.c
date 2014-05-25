@@ -316,6 +316,11 @@ lval* builtin_op(lenv* e, lval* a, char* op) {
   return x;
 }
 
+lval* builtin_add(lenv* e, lval* a) { return builtin_op(e, a, "+"); }
+lval* builtin_sub(lenv* e, lval* a) { return builtin_op(e, a, "-"); }
+lval* builtin_mul(lenv* e, lval* a) { return builtin_op(e, a, "*"); }
+lval* builtin_div(lenv* e, lval* a) { return builtin_op(e, a, "/"); }
+
 lval* builtin_head(lenv* e, lval* a) {
   LASSERT(a, (a->count == 1), "Function 'head' passed too many arguments");
 
