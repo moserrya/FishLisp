@@ -239,7 +239,7 @@ lval* lenv_get(lenv* e, lval* k) {
     if (strcmp(e->syms[i], k->sym) == 0) { return lval_copy(e->vals[i]); }
   }
 
-  return lval_err("unbound symbol!");
+  return lval_err("unbound symbol '%s'", k->sym);
 }
 
 void lenv_put(lenv* e, lval* k, lval* v) {
@@ -264,7 +264,12 @@ void lenv_put(lenv* e, lval* k, lval* v) {
   strcpy(e->syms[e->count-1], k->sym);
 }
 
-#define LASSERT(args, cond, err) if (!(cond)) { lval_del(args); return lval_err(err); }
+#define LASSERT(args, cond, fmt, ...) \
+  if (!(cond)) { \
+    lval* err = lval_err(fmt, ##__VA_ARGS__); \
+    lval_del(args); \
+    return err; \
+  }
 
 lval* lval_eval(lenv* e, lval* v);
 
@@ -353,7 +358,7 @@ lval* builtin_def(lenv* e, lval* a) {
 }
 
 lval* builtin_head(lenv* e, lval* a) {
-  LASSERT(a, (a->count == 1), "Function 'head' passed too many arguments");
+  LASSERT(a, (a->count == 1), "Function 'head' passed too many arguments. Got %i, expected %i.", a->count, 1);
 
   LASSERT(a, (a->cell[0]->type == LVAL_QEXPR), "Function 'head' passed incorrect types!");
 
