@@ -48,6 +48,12 @@ struct lval {
   lval** cell;
 };
 
+struct lenv {
+  int count;
+  char** syms;
+  lval** vals;
+};
+
 lval* lval_fun(lbuiltin func) {
   lval* v = malloc(sizeof(lval));
   v->type = LVAL_FUN;
