@@ -321,6 +321,22 @@ lval* builtin_sub(lenv* e, lval* a) { return builtin_op(e, a, "-"); }
 lval* builtin_mul(lenv* e, lval* a) { return builtin_op(e, a, "*"); }
 lval* builtin_div(lenv* e, lval* a) { return builtin_op(e, a, "/"); }
 
+void lenv_add_builtin(lenv* e, char* name, lbuiltin func) {
+  lval* k = lval_sym(name);
+  lval* v = lval_fun(func);
+  lenv_put(e, k, v);
+  lval_del(k); lval_del(v);
+}
+
+void lenv_add_builtins(lenv* e) {
+  lenv_add_builtin(e, "list", builtin_list);
+  lenv_add_builtin(e, "head", builtin_head); lenv_add_builtin(e, "tail", builtin_tail);
+  lenv_add_builtin(e, "eval", builtin_eval); lenv_add_builtin(e, "join", builtin_join);
+
+  lenv_add_builtin(e, "+", builtin_add); lenv_add_builtin(e, "-", builtin_sub); 
+  lenv_add_builtin(e, "*", builtin_mul); lenv_add_builtin(e, "/", builtin_div); 
+}
+
 lval* builtin_head(lenv* e, lval* a) {
   LASSERT(a, (a->count == 1), "Function 'head' passed too many arguments");
 
