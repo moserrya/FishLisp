@@ -160,8 +160,8 @@ lval* lval_join(lval* x, lval* y) {
   for (int i = 0; i < y->count; i++) {
     x = lval_add(x, y->cell[i]);
   }
-
-  lval_del(y);
+  free(y->cell);
+  free(y);
   return x;
 }
 
