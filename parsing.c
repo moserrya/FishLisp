@@ -451,26 +451,31 @@ lval* builtin_sub(lenv* e, lval* a) { return builtin_op(e, a, "-"); }
 lval* builtin_mul(lenv* e, lval* a) { return builtin_op(e, a, "*"); }
 lval* builtin_div(lenv* e, lval* a) { return builtin_op(e, a, "/"); }
 
-lval* builtin_def(lenv* e, lval* a) {
-  LASSERT_TYPE("def", a, 0, LVAL_QEXPR);
+lval* builtin_var(lenv* e, lval* a, char* func) {
+  LASSERT_TYPE(func, a, 0, LVAL_QEXPR);
 
   lval* syms = a->cell[0];
-
   for (int i = 0; i < syms->count; i++) {
-    LASSERT(a, (syms->cell[i]->type == LVAL_SYM), "Function 'def' cannot define non-symbol. Expected %s, got %s",
-      ltype_name(syms->cell[i]->type), ltype_name(LVAL_SYM));
+    LASSERT(a, (syms->cell[i]->type == LVAL_SYM),
+      "Function '%s' cannot define non-symbol. Got %s, expected %s.",
+      func, ltype_name(syms->cell[i]->type), ltype_name(LVAL_SYM));
   }
 
-  LASSERT(a, (syms->count == a->count-1), "Function 'def' cannot define incorrect number of values to symbols. Got %i, expected %i",
-    syms->count, a->count-1);
+  LASSERT(a, (syms->count == a->count-1),
+    "Function '%s' passed too many arguments for symbols. Got %i, expected %i.",
+    func, syms->count, a->count-1);
 
   for (int i = 0; i < syms->count; i++) {
-    lenv_put(e, syms->cell[i], a->cell[i+1]);
+    if (strcmp(func, "def") == 0) { lenv_def(e, syms->cell[i], a->cell[i+1]); }
+    if (strcmp(func, "=")   == 0) { lenv_put(e, syms->cell[i], a->cell[i+1]); }
   }
 
   lval_del(a);
   return lval_sexpr();
 }
+
+lval* builtin_def(lenv* e, lval* a) { return builtin_var(e, a, "def"); }
+lval* builtin_put(lenv* e, lval* a) { return builtin_var(e, a, "="); }
 
 lval* builtin_head(lenv* e, lval* a) {
   LASSERT_NUM("head", a, 1)
@@ -542,6 +547,7 @@ void lenv_add_builtins(lenv* e) {
   lenv_add_builtin(e, "*", builtin_mul); lenv_add_builtin(e, "/", builtin_div); 
 
   lenv_add_builtin(e, "def", builtin_def);
+  lenv_add_builtin(e, "="  , builtin_put);
 }
 
 lval* lval_eval_sexpr(lenv* e, lval* v) {
