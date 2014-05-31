@@ -85,6 +85,8 @@ lval* lval_sym(char* s) {
   return v;
 }
 
+lenv* lenv_new(void);
+
 lval* lval_lambda(lval* formals, lval* body) {
   lval* v = malloc(sizeof(lval));
   v->type = LVAL_FUN;
@@ -95,13 +97,13 @@ lval* lval_lambda(lval* formals, lval* body) {
 
   v->formals = formals;
   v->body = body;
-  reutrn v;
+  return v;
 }
 
 lval* lval_fun(lbuiltin func) {
   lval* v = malloc(sizeof(lval));
   v->type = LVAL_FUN;
-  v->fun = func;
+  v->builtin = func;
   return v;
 }
 
@@ -120,6 +122,8 @@ lval* lval_qexpr(void) {
   v->cell = NULL;
   return v;
 }
+
+void lenv_del(lenv* e);
 
 void lval_del(lval* v) {
   switch (v->type) {
@@ -147,6 +151,8 @@ void lval_del(lval* v) {
 
   free(v);
 }
+
+lenv* lenv_copy(lenv* e);
 
 lval* lval_copy(lval* v) {
   lval* x= malloc(sizeof(lval));
@@ -238,7 +244,7 @@ void lval_print(lval* v) {
       if (v->builtin) {
         printf("<builtin>");
       } else {
-        printf("(\\ "); lval_print(v->formals); putchar(' ');, lval_print(v->body); putchar(')');
+        printf("(\\ "); lval_print(v->formals); putchar(' '); lval_print(v->body); putchar(')');
       }
     break;
     case LVAL_SEXPR: lval_print_expr(v, '(', ')'); break;
