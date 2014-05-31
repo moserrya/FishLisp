@@ -340,6 +340,11 @@ void lenv_put(lenv* e, lval* k, lval* v) {
   strcpy(e->syms[e->count-1], k->sym);
 }
 
+void lenv_def(lenv* e, lval* k, lval* v) {
+  while (e->par) { e = e-> par; }
+  lenv_put(e, k, v);
+}
+
 #define LASSERT(args, cond, fmt, ...) \
   if (!(cond)) { \
     lval* err = lval_err(fmt, ##__VA_ARGS__); \
