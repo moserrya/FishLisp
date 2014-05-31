@@ -128,7 +128,13 @@ void lval_del(lval* v) {
     case LVAL_ERR: free(v->err); break;
     case LVAL_SYM: free(v->sym); break;
 
-    case LVAL_FUN: break;
+    case LVAL_FUN:
+      if (!v->builtin) {
+        lenv_del(v->env);
+        lval_del(v->formals);
+        lval_del(v->body);
+      }
+    break;
 
     case LVAL_QEXPR:
     case LVAL_SEXPR:
@@ -147,7 +153,16 @@ lval* lval_copy(lval* v) {
   x->type = v->type;
 
   switch (v->type) {
-    case LVAL_FUN: x->fun = v->fun; break;
+    case LVAL_FUN:
+      if (v->builtin) {
+        x->builtin = v->builtin;
+      } else {
+        x->builtin = NULL;
+        x->env = lenv_copy(v->env);
+        x->formals = lval_copy(v->formals);
+        x->body = lval_copy(v->body);
+      }
+    break;
     case LVAL_NUM: x->num = v->num; break;
 
     case LVAL_ERR: x->err = malloc(strlen(v->err) + 1); strcpy(x->err, v->err); break;
@@ -219,7 +234,13 @@ void lval_print(lval* v) {
     case LVAL_NUM: printf("%li", v->num); break;
     case LVAL_ERR: printf("Error: %s", v->err); break;
     case LVAL_SYM: printf("%s", v->sym); break;
-    case LVAL_FUN: printf("<function>"); break;
+    case LVAL_FUN:
+      if (v->builtin) {
+        printf("<builtin>");
+      } else {
+        printf("(\\ "); lval_print(v->formals); putchar(' ');, lval_print(v->body); putchar(')');
+      }
+    break;
     case LVAL_SEXPR: lval_print_expr(v, '(', ')'); break;
     case LVAL_QEXPR: lval_print_expr(v, '{', '}'); break;
   }
