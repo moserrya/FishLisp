@@ -337,6 +337,24 @@ void lenv_put(lenv* e, lval* k, lval* v) {
 
 lval* lval_eval(lenv* e, lval* v);
 
+lval* builtin_lambda(lenv* e, lval* a) {
+  LASSERT_NUM("\\", a, 2);
+  LASSERT_TYPE("\\", a, 0, LVAL_QEXPR);
+  LASSERT_TYPE("\\", a, 1, LVAL_QEXPR);
+
+  for (int i = 0; i < a->cell[0]->count; i++) {
+    LASSERT(a, (a->cell[0]->cell[i]->type == LVAL_SYM),
+      "Cannot define non-symbol. Got %s, expected %s.",
+      ltype_name(a->cell[0]->cell[i]->type), ltype_name(LVAL_SYM));
+  }
+
+  lval* formals = lval_pop(a, 0);
+  lval* body = lval_pop(a, 0);
+  lval_del(a);
+
+  return lval_lambda(formals, body);
+}
+
 lval* lval_read_num(mpc_ast_t* t) {
   errno = 0;
   long x = strtol(t->contents, NULL, 10);
