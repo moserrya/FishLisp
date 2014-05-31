@@ -267,6 +267,7 @@ char* ltype_name(int t) {
 }
 
 struct lenv {
+  lenv* par;
   int count;
   char** syms;
   lval** vals;
@@ -274,6 +275,7 @@ struct lenv {
 
 lenv* lenv_new(void) {
   lenv* e = malloc(sizeof(lenv));
+  e->par = NULL;
   e->count = 0;
   e->syms = NULL;
   e->vals = NULL;
@@ -295,7 +297,11 @@ lval* lenv_get(lenv* e, lval* k) {
     if (strcmp(e->syms[i], k->sym) == 0) { return lval_copy(e->vals[i]); }
   }
 
-  return lval_err("unbound symbol '%s'", k->sym);
+  if (e->par) {
+    return lenv_get(e->par, k);
+  } else
+    return lval_err("unbound symbol '%s'", k->sym);
+  }
 }
 
 void lenv_put(lenv* e, lval* k, lval* v) {
