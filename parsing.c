@@ -32,7 +32,7 @@ typedef struct lenv lenv;
 
 /* Lisp value */
 
-enum { LVAL_NUM, LVAL_ERR, LVAL_SYM, LVAL_FUN, LVAL_SEXPR, LVAL_QEXPR };
+enum { LVAL_NUM, LVAL_ERR, LVAL_SYM, LVAL_STR, LVAL_FUN, LVAL_SEXPR, LVAL_QEXPR };
 
 typedef lval*(*lbuiltin)(lenv*, lval*);
 
@@ -42,6 +42,7 @@ struct lval {
   long num;
   char* err;
   char* sym;
+  char* str;
 
   lbuiltin builtin;
   lenv* env;
