@@ -550,6 +550,38 @@ void lenv_add_builtins(lenv* e) {
   lenv_add_builtin(e, "="  , builtin_put);
 }
 
+lval* lval_call(lenv* e, lval* f, lval* a) {
+  if (f->builtin) { return f->builtin(e, a); }
+
+  int given = a->count;
+  int total = f->formals->count;
+
+  while (a->count) {
+    if (f->formals->count == 0) {
+      lval_del(a);
+      return lval_err("Function passed too many arguments. Got %i, expected %i.", given, total);
+    }
+
+    lval* sym = lval_pop(f->formals, 0);
+
+    lval* val = lval_pop(a, 0);
+
+    lenv_put(f->env, sym, val);
+
+    lval_del(sym); lval_del(val);
+  }
+
+  lval_del(a);
+
+  if (f->formals->count == 0) {
+    f->env->par = e;
+
+    return builtin_eval(f->env, lval_add(lval_sexpr(), lval_copy(f->body)));
+  } else {
+    return lval_copy(f);
+  }
+}
+
 lval* lval_eval_sexpr(lenv* e, lval* v) {
 
   for (int i = 0; i < v->count; i++) {
@@ -566,11 +598,13 @@ lval* lval_eval_sexpr(lenv* e, lval* v) {
 
   lval* f = lval_pop(v, 0);
   if (f->type != LVAL_FUN) {
+    lval* err = lval_err("S-Expression starts with incorrect type. Got %s, expected %s.",
+      ltype_name(f->type), ltype_name(LVAL_FUN));
     lval_del(v); lval_del(f);
-    return lval_err("first element is not a function");
+    return err;
   }
 
-  lval* result = f->fun(e, v);
+  lval* result = lval_call(e, f, v);
   lval_del(f);
   return result;
 }
