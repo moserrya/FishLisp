@@ -140,6 +140,7 @@ int lval_eq(lval* x, lval* y) {
 
     case LVAL_ERR: return (strcmp(x->err, y->err) == 0);
     case LVAL_SYM: return (strcmp(x->sym, y->sym) == 0);
+    case LVAL_STR: return (strcmp(x->str, y->str) == 0);
 
     case LVAL_FUN:
       if (x->builtin || y->builtin) {
@@ -169,6 +170,7 @@ void lval_del(lval* v) {
 
     case LVAL_ERR: free(v->err); break;
     case LVAL_SYM: free(v->sym); break;
+    case LVAL_STR: free(v->str); break;
 
     case LVAL_FUN:
       if (!v->builtin) {
@@ -211,6 +213,7 @@ lval* lval_copy(lval* v) {
 
     case LVAL_ERR: x->err = malloc(strlen(v->err) + 1); strcpy(x->err, v->err); break;
     case LVAL_SYM: x->sym = malloc(strlen(v->sym) + 1); strcpy(x->sym, v->sym); break;
+    case LVAL_STR: x->str = malloc(strlen(v->str) + 1); strcpy(x->str, v->str); break;
 
     case LVAL_SEXPR:
     case LVAL_QEXPR:
@@ -273,11 +276,19 @@ void lval_print_expr(lval* v, char open, char close) {
   putchar(close);
 }
 
+void lval_print_str(lval* v) {
+  char* escaped = malloc(strlen(v->str)+1);
+  strcpy(escaped, v->str);
+
+  escaped = mpcf_escape(escaped);
+
+  printf("\"%s\"", escaped);
+
+  free(escaped);
+}
+
 void lval_print(lval* v) {
   switch (v->type) {
-    case LVAL_NUM: printf("%li", v->num); break;
-    case LVAL_ERR: printf("Error: %s", v->err); break;
-    case LVAL_SYM: printf("%s", v->sym); break;
     case LVAL_FUN:
       if (v->builtin) {
         printf("<builtin>");
@@ -285,6 +296,10 @@ void lval_print(lval* v) {
         printf("(\\ "); lval_print(v->formals); putchar(' '); lval_print(v->body); putchar(')');
       }
     break;
+    case LVAL_NUM: printf("%li", v->num); break;
+    case LVAL_ERR: printf("Error: %s", v->err); break;
+    case LVAL_SYM: printf("%s", v->sym); break;
+    case LVAL_STR: lval_print_str(v); break;
     case LVAL_SEXPR: lval_print_expr(v, '(', ')'); break;
     case LVAL_QEXPR: lval_print_expr(v, '{', '}'); break;
   }
@@ -298,6 +313,7 @@ char* ltype_name(int t) {
     case LVAL_NUM: return "Number";
     case LVAL_ERR: return "Error";
     case LVAL_SYM: return "Symbol";
+    case LVAL_STR: return "String";
     case LVAL_SEXPR: return "S-Expression";
     case LVAL_QEXPR: return "Q-Expression";
     default: return "Unknown";
@@ -430,8 +446,23 @@ lval* lval_read_num(mpc_ast_t* t) {
   return errno != ERANGE ? lval_num(x) : lval_err("invalid_number");
 }
 
+lval* lval_read_str(mpc_ast_t* t) {
+  t->contents[strlen(t->contents)-1] = '\0';
+
+  char* unescaped = malloc(strlen(t->contents+1)+1);
+  strcpy(unescaped, t->contents+1);
+
+  unescaped = mpcf_unescape(unescaped);
+
+  lval* str = lval_str(unescaped);
+
+  free(unescaped);
+  return str;
+}
+
 lval* lval_read(mpc_ast_t* t) {
   if (strstr(t->tag, "number")) { return lval_read_num(t); }
+  if (strstr(t->tag, "string")) { return lval_read_str(t); }
   if (strstr(t->tag, "symbol")) { return lval_sym(t->contents); }
 
   lval* x = NULL;
@@ -748,21 +779,23 @@ int main(int argc, char** argv) {
 
   mpc_parser_t* Number   = mpc_new("number");
   mpc_parser_t* Symbol   = mpc_new("symbol");
+  mpc_parser_t* String   = mpc_new("string");
   mpc_parser_t* Sexpr    = mpc_new("sexpr");
   mpc_parser_t* Qexpr    = mpc_new("qexpr");
   mpc_parser_t* Expr     = mpc_new("expr");
   mpc_parser_t* Lispy    = mpc_new("lispy");
 
   mpca_lang(MPCA_LANG_DEFAULT,
-    "                                                    \
-    number   : /-?[0-9]+[.]?[0-9]*/ ;                    \
-    symbol   : /[a-zA-Z0-9_+\\-*\\/\\\\=<>!&]+/ ;        \
-    sexpr    : '(' <expr>* ')' ;                         \
-    qexpr    : '{' <expr>* '}' ;                         \
-    expr     : <number> | <symbol> | <sexpr> | <qexpr> ; \
-    lispy    : /^/ <expr>* /$/ ;                         \
+    "                                                   \
+    number  : /-?[0-9]+[.]?[0-9]*/ ;                    \
+    symbol  : /[a-zA-Z0-9_+\\-*\\/\\\\=<>!&]+/ ;        \
+    string  : /\"(\\\\.|[^\"])*\"/ ;                    \
+    sexpr   : '(' <expr>* ')' ;                         \
+    qexpr   : '{' <expr>* '}' ;                         \
+    expr    : <number> | <symbol> | <sexpr> | <qexpr> ; \
+    lispy   : /^/ <expr>* /$/ ;                         \
     ",
-    Number, Symbol, Sexpr, Qexpr, Expr, Lispy);
+    Number, Symbol, String, Sexpr, Qexpr, Expr, Lispy);
 
   lenv* e = lenv_new();
   lenv_add_builtins(e);
@@ -787,7 +820,7 @@ int main(int argc, char** argv) {
     free(input);
   }
 
-  mpc_cleanup(6, Number, Symbol, Sexpr, Qexpr, Expr, Lispy);
+  mpc_cleanup(7, Number, Symbol, String, Sexpr, Qexpr, Expr, Lispy);
 
   return 0;
 }
