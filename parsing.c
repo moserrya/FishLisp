@@ -781,6 +781,7 @@ int main(int argc, char** argv) {
   mpc_parser_t* Number   = mpc_new("number");
   mpc_parser_t* Symbol   = mpc_new("symbol");
   mpc_parser_t* String   = mpc_new("string");
+  mpc_parser_t* Comment  = mpc_new("comment");
   mpc_parser_t* Sexpr    = mpc_new("sexpr");
   mpc_parser_t* Qexpr    = mpc_new("qexpr");
   mpc_parser_t* Expr     = mpc_new("expr");
@@ -794,7 +795,8 @@ int main(int argc, char** argv) {
     comment : /;[^\\r\\n]*/   ;                         \
     sexpr   : '(' <expr>* ')' ;                         \
     qexpr   : '{' <expr>* '}' ;                         \
-    expr    : <number> | <symbol> | <sexpr> | <qexpr> ; \
+    expr    : <number>  | <symbol> | <string>           \
+            | <comment> | <sexpr>  | <qexpr> ;          \
     lispy   : /^/ <expr>* /$/ ;                         \
     ",
     Number, Symbol, String, Comment, Sexpr, Qexpr, Expr, Lispy);
