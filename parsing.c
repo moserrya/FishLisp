@@ -476,6 +476,7 @@ lval* lval_read(mpc_ast_t* t) {
     if (strcmp(t->children[i]->contents, "{") == 0) { continue; }
     if (strcmp(t->children[i]->contents, "}") == 0) { continue; }
     if (strcmp(t->children[i]->tag,  "regex") == 0) { continue; }
+    if (strstr(t->children[i]->tag, "comment"))     { continue; }
     x = lval_add(x, lval_read(t->children[i]));
   }
 
@@ -790,12 +791,13 @@ int main(int argc, char** argv) {
     number  : /-?[0-9]+[.]?[0-9]*/ ;                    \
     symbol  : /[a-zA-Z0-9_+\\-*\\/\\\\=<>!&]+/ ;        \
     string  : /\"(\\\\.|[^\"])*\"/ ;                    \
+    comment : /;[^\\r\\n]*/   ;                         \
     sexpr   : '(' <expr>* ')' ;                         \
     qexpr   : '{' <expr>* '}' ;                         \
     expr    : <number> | <symbol> | <sexpr> | <qexpr> ; \
     lispy   : /^/ <expr>* /$/ ;                         \
     ",
-    Number, Symbol, String, Sexpr, Qexpr, Expr, Lispy);
+    Number, Symbol, String, Comment, Sexpr, Qexpr, Expr, Lispy);
 
   lenv* e = lenv_new();
   lenv_add_builtins(e);
@@ -820,7 +822,7 @@ int main(int argc, char** argv) {
     free(input);
   }
 
-  mpc_cleanup(7, Number, Symbol, String, Sexpr, Qexpr, Expr, Lispy);
+  mpc_cleanup(8, Number, Symbol, String, Comment, Sexpr, Qexpr, Expr, Lispy);
 
   return 0;
 }
