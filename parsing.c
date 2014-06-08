@@ -650,6 +650,16 @@ lval* builtin_print(lenv* e, lval* a) {
   return lval_sexpr();
 }
 
+lval* builtin_error(lenv* e, lval* a) {
+  LASSERT_NUM("error", a, 1);
+  LASSERT_TYPE("error", a, 0, LVAL_STR);
+
+  lval* err = lval_err(a->cell[0]->str);
+
+  lval_del(a);
+  return err;
+}
+
 lval* builtin_head(lenv* e, lval* a) {
   LASSERT_NUM("head", a, 1)
 
