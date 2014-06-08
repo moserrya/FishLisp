@@ -739,6 +739,9 @@ void lenv_add_builtins(lenv* e) {
   lenv_add_builtin(e, "==", builtin_eq); lenv_add_builtin(e, "!=", builtin_ne);
 
   lenv_add_builtin(e, "if", builtin_if);
+
+  lenv_add_builtin(e, "load", builtin_load);
+  lenv_add_builtin(e, "error", builtin_error); lenv_add_builtin(e, "print", builtin_print);
 }
 
 lval* lval_call(lenv* e, lval* f, lval* a) {
