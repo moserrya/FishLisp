@@ -639,6 +639,17 @@ lval* builtin_load(lenv* e, lval* a) {
   }
 }
 
+lval* builtin_print(lenv* e, lval* a) {
+  for (int i = 0; i < a->count; i++) {
+    lval_print(a->cell[i], putchar(' '));
+  }
+
+  putchar('\n');
+  lval_del(a);
+
+  return lval_sexpr();
+}
+
 lval* builtin_head(lenv* e, lval* a) {
   LASSERT_NUM("head", a, 1)
 
