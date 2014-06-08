@@ -609,7 +609,7 @@ lval* builtin_if(lenv* e, lval* a) {
 
 lval* builtin_load(lenv* e, lval* a) {
   LASSERT_NUM("load", a, 1);
-  LASSERT_TYPE("load"), a, 0, LVAL_STR);
+  LASSERT_TYPE("load", a, 0, LVAL_STR);
 
   mpc_result_t r;
   if (mpc_parse_contents(a->cell[0]->str, Lispy, &r)) {
@@ -641,7 +641,7 @@ lval* builtin_load(lenv* e, lval* a) {
 
 lval* builtin_print(lenv* e, lval* a) {
   for (int i = 0; i < a->count; i++) {
-    lval_print(a->cell[i], putchar(' '));
+    lval_print(a->cell[i]); putchar(' ');
   }
 
   putchar('\n');
@@ -893,7 +893,7 @@ int main(int argc, char** argv) {
     }
   }
 
-  if (args >= 2) {
+  if (argc >= 2) {
     for(int i = 1; i < argc; i++) {
       /* Create argument list with single argument (the filename) */
       lval* args = lval_add(lval_sexpr(), lval_str(argv[i]));
